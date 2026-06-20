@@ -1,4 +1,4 @@
-import { desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { getDb } from "@/db";
 import { matches } from "@/db/schema";
 
@@ -10,7 +10,7 @@ export type MatchSummary = {
   createdAt: Date;
 };
 
-export async function listMatches(): Promise<MatchSummary[]> {
+export async function listMatchesForUser(userId: string): Promise<MatchSummary[]> {
   const db = getDb();
   return db
     .select({
@@ -21,5 +21,6 @@ export async function listMatches(): Promise<MatchSummary[]> {
       createdAt: matches.createdAt,
     })
     .from(matches)
+    .where(eq(matches.createdByUserId, userId))
     .orderBy(desc(matches.createdAt));
 }

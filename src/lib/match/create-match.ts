@@ -1,14 +1,12 @@
 import { z } from "zod";
 import { getDb } from "@/db";
 import { matches, players, innings } from "@/db/schema";
-import { hashPin } from "@/lib/auth/scorer-session";
 
 export const createMatchSchema = z.object({
   teamAName: z.string().min(1),
   teamBName: z.string().min(1),
   tossWinner: z.enum(["a", "b"]),
   electedTo: z.enum(["bat", "bowl"]),
-  pin: z.string().regex(/^\d{4,6}$/),
   teamAPlayers: z.array(z.string().min(1)).length(11),
   teamBPlayers: z.array(z.string().min(1)).length(11),
   openingStrikerIndex: z.number().int().min(0).max(10),
@@ -18,9 +16,8 @@ export const createMatchSchema = z.object({
 
 export type CreateMatchInput = z.infer<typeof createMatchSchema>;
 
-export async function createMatch(input: CreateMatchInput) {
+export async function createMatch(input: CreateMatchInput, createdByUserId: string) {
   const db = getDb();
-  const pinHash = await hashPin(input.pin);
 
   const battingFirst =
     (input.tossWinner === "a" && input.electedTo === "bat") ||
@@ -35,7 +32,7 @@ export async function createMatch(input: CreateMatchInput) {
       teamBName: input.teamBName,
       tossWinner: input.tossWinner,
       electedTo: input.electedTo,
-      scorerPinHash: pinHash,
+      createdByUserId,
       status: "innings_1",
     })
     .returning();

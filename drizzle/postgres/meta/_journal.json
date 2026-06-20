@@ -8,6 +8,13 @@
       "when": 1781926620194,
       "tag": "0000_military_hairball",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781940000000,
+      "tag": "0002_clerk_auth",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import type { MatchState } from "@/lib/match/match-state";
 import type { MatchEngagement } from "@/lib/match/engagement";
 import {
@@ -9,15 +12,10 @@ import {
   buildShareResultText,
   shareNative,
 } from "@/lib/share/match-share";
+import { getDisplayInitials } from "@/lib/auth/display-name";
 import { MatchShareModal } from "./match-share-modal";
 import { MatchCommentsSection } from "./match-comments-section";
-import {
-  getViewerDisplayName,
-  getViewerId,
-  getViewerInitials,
-  setViewerDisplayName,
-} from "@/lib/viewer/viewer-id";
-import { focusRing, inputFieldSm, matchPanel } from "@/lib/ui/styles";
+import { focusRing, matchPanel } from "@/lib/ui/styles";
 
 type MatchEngagementBarProps = {
   matchId: string;
@@ -80,30 +78,20 @@ function SendIcon() {
   );
 }
 
-function ChevronDownIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="size-3">
-      <path
-        fillRule="evenodd"
-        d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
-
 function ActionButton({
   label,
   icon,
   onClick,
   active,
   count,
+  disabled,
 }: {
   label: string;
   icon: React.ReactNode;
-  onClick: () => void;
+  onClick?: () => void;
   active?: boolean;
   count?: number;
+  disabled?: boolean;
 }) {
   const displayLabel = count != null && count > 0 ? `${label} · ${count}` : label;
 
@@ -111,8 +99,9 @@ function ActionButton({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-pressed={active}
-      className={`${focusRing} flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-2 text-xs font-semibold ${
+      className={`${focusRing} flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-2 text-xs font-semibold disabled:opacity-50 ${
         active ? "text-primary" : "text-muted hover:text-foreground"
       }`}
     >
@@ -123,93 +112,45 @@ function ActionButton({
 }
 
 export function MatchEngagementBar({ matchId, state }: MatchEngagementBarProps) {
-  const profileMenuId = useId();
-  const rootRef = useRef<HTMLDivElement>(null);
-  const profileButtonRef = useRef<HTMLButtonElement>(null);
+  const pathname = usePathname();
   const commentInputRef = useRef<HTMLInputElement>(null);
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
 
-  const [viewerId, setViewerId] = useState("");
-  const [displayName, setDisplayName] = useState("Spectator");
   const [engagement, setEngagement] = useState<MatchEngagement | null>(null);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [profileMenuPosition, setProfileMenuPosition] = useState<{ top: number; left: number } | null>(
-    null,
-  );
-  const [nameDraft, setNameDraft] = useState("");
   const [shareOpen, setShareOpen] = useState(false);
   const [likePending, setLikePending] = useState(false);
 
-  useEffect(() => {
-    setViewerId(getViewerId());
-    setDisplayName(getViewerDisplayName());
-  }, []);
+  const displayName =
+    user?.fullName ||
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    "User";
+
+  const signInHref = `/sign-in?redirect_url=${encodeURIComponent(pathname)}`;
 
   const fetchEngagement = async () => {
-    const vid = getViewerId();
-    const res = await fetch(`/api/matches/${matchId}/engagement?viewerId=${encodeURIComponent(vid)}`);
+    const res = await fetch(`/api/matches/${matchId}/engagement`, {
+      credentials: "include",
+    });
     if (!res.ok) return;
-    const data = (await res.json()) as MatchEngagement;
-    setEngagement(data);
+    setEngagement((await res.json()) as MatchEngagement);
   };
 
   useEffect(() => {
-    if (!viewerId) return;
     void fetchEngagement();
     const intervalId = setInterval(() => void fetchEngagement(), 8000);
     return () => clearInterval(intervalId);
-  }, [matchId, viewerId]);
-
-  function updateProfileMenuPosition() {
-    const button = profileButtonRef.current;
-    if (!button) return;
-    const rect = button.getBoundingClientRect();
-    setProfileMenuPosition({
-      top: rect.bottom + 4,
-      left: rect.left,
-    });
-  }
-
-  useEffect(() => {
-    if (!profileOpen) return;
-
-    function handlePointerDown(event: MouseEvent | TouchEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setProfileOpen(false);
-      }
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setProfileOpen(false);
-      }
-    }
-
-    function handleLayoutChange() {
-      updateProfileMenuPosition();
-    }
-
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("touchstart", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("resize", handleLayoutChange);
-    window.addEventListener("scroll", handleLayoutChange, true);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("touchstart", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("resize", handleLayoutChange);
-      window.removeEventListener("scroll", handleLayoutChange, true);
-    };
-  }, [profileOpen]);
+  }, [matchId, isSignedIn]);
 
   async function handleLike() {
-    if (!viewerId || likePending) return;
+    if (likePending) return;
     setLikePending(true);
     try {
       const res = await fetch(`/api/matches/${matchId}/engagement`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "like", viewerId }),
+        credentials: "include",
+        body: JSON.stringify({ action: "like" }),
       });
       if (res.ok) {
         setEngagement((await res.json()) as MatchEngagement);
@@ -242,89 +183,55 @@ export function MatchEngagementBar({ matchId, state }: MatchEngagementBarProps) 
     }
   }
 
-  function toggleProfileMenu() {
-    setProfileOpen((open) => {
-      if (!open) {
-        setNameDraft(displayName);
-        updateProfileMenuPosition();
-      }
-      return !open;
-    });
-  }
-
-  function saveDisplayName() {
-    setViewerDisplayName(nameDraft);
-    setDisplayName(getViewerDisplayName());
-    setProfileOpen(false);
-  }
-
   function focusComments() {
     document.getElementById("match-comments")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    commentInputRef.current?.focus();
+    if (isSignedIn) {
+      commentInputRef.current?.focus();
+    }
   }
 
   const likeCount = engagement?.likeCount ?? 0;
   const commentCount = engagement?.commentCount ?? 0;
-  const liked = engagement?.likedByViewer ?? false;
+  const liked = engagement?.likedByUser ?? false;
 
   return (
     <>
       <section className={`${matchPanel} overflow-visible`} aria-label="Match engagement">
         <div className="flex items-center gap-2 border-b border-border px-3 py-2">
-          <div ref={rootRef} className="relative shrink-0">
-            <button
-              ref={profileButtonRef}
-              type="button"
-              aria-haspopup="menu"
-              aria-expanded={profileOpen}
-              aria-controls={profileMenuId}
-              aria-label="Your viewer profile"
-              onClick={toggleProfileMenu}
-              className={`${focusRing} flex items-center gap-1 rounded-full pr-1`}
-            >
-              <span className="flex size-8 items-center justify-center rounded-full bg-[var(--surface-muted)] text-xs font-semibold text-foreground">
-                {getViewerInitials(displayName)}
+          <div className="shrink-0">
+            {isSignedIn && user?.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.imageUrl}
+                alt=""
+                className="size-8 rounded-full object-cover"
+              />
+            ) : (
+              <span className="flex size-8 items-center justify-center rounded-full bg-[var(--surface-muted)] text-xs font-semibold text-muted">
+                {isSignedIn ? getDisplayInitials(displayName) : "?"}
               </span>
-              <ChevronDownIcon />
-            </button>
-
-            {profileOpen && profileMenuPosition && (
-              <div
-                id={profileMenuId}
-                role="menu"
-                style={{ top: profileMenuPosition.top, left: profileMenuPosition.left }}
-                className="fixed z-[var(--z-dropdown)] w-52 rounded-xl border border-border bg-surface p-3 shadow-lg"
-              >
-                <label htmlFor={`${profileMenuId}-name`} className="text-xs font-medium text-muted">
-                  Display name
-                </label>
-                <input
-                  id={`${profileMenuId}-name`}
-                  type="text"
-                  value={nameDraft}
-                  onChange={(event) => setNameDraft(event.target.value)}
-                  maxLength={40}
-                  className={`${inputFieldSm} mt-1 w-full`}
-                />
-                <button
-                  type="button"
-                  onClick={saveDisplayName}
-                  className={`${focusRing} mt-2 w-full rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground`}
-                >
-                  Save
-                </button>
-              </div>
             )}
           </div>
 
           <div className="flex min-w-0 flex-1 items-stretch divide-x divide-border">
-            <ActionButton
-              label="Like"
-              icon={<LikeIcon filled={liked} />}
-              onClick={handleLike}
-              active={liked}
-              count={likeCount}
-            />
+            {isSignedIn ? (
+              <ActionButton
+                label="Like"
+                icon={<LikeIcon filled={liked} />}
+                onClick={handleLike}
+                active={liked}
+                count={likeCount}
+                disabled={likePending}
+              />
+            ) : (
+              <Link
+                href={signInHref}
+                className={`${focusRing} flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-2 text-xs font-semibold text-muted no-underline hover:text-foreground`}
+              >
+                <LikeIcon />
+                <span className="truncate">{likeCount > 0 ? `Like · ${likeCount}` : "Like"}</span>
+              </Link>
+            )}
             <ActionButton
               label="Comment"
               icon={<CommentIcon />}
@@ -343,7 +250,7 @@ export function MatchEngagementBar({ matchId, state }: MatchEngagementBarProps) 
         <MatchCommentsSection
           matchId={matchId}
           displayName={displayName}
-          viewerId={viewerId}
+          isSignedIn={isSignedIn ?? false}
           engagement={engagement}
           onEngagementChange={setEngagement}
           inputRef={commentInputRef}

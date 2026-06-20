@@ -33,7 +33,7 @@ export const matches = pgTable("matches", {
   teamBName: text("team_b_name").notNull(),
   tossWinner: teamEnum("toss_winner").notNull(),
   electedTo: electedToEnum("elected_to").notNull(),
-  scorerPinHash: text("scorer_pin_hash").notNull(),
+  createdByUserId: text("created_by_user_id"),
   status: matchStatusEnum("status").notNull().default("innings_1"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -91,14 +91,6 @@ export const deliveries = pgTable(
   (table) => [uniqueIndex("deliveries_client_event_id_idx").on(table.clientEventId)],
 );
 
-export const scorerSessions = pgTable("scorer_sessions", {
-  token: uuid("token").primaryKey().defaultRandom(),
-  matchId: uuid("match_id")
-    .notNull()
-    .references(() => matches.id, { onDelete: "cascade" }),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-});
-
 export const matchLikes = pgTable(
   "match_likes",
   {
@@ -106,10 +98,10 @@ export const matchLikes = pgTable(
     matchId: uuid("match_id")
       .notNull()
       .references(() => matches.id, { onDelete: "cascade" }),
-    viewerId: text("viewer_id").notNull(),
+    userId: text("user_id").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (table) => [uniqueIndex("match_likes_match_viewer_idx").on(table.matchId, table.viewerId)],
+  (table) => [uniqueIndex("match_likes_match_user_idx").on(table.matchId, table.userId)],
 );
 
 export const matchComments = pgTable("match_comments", {
@@ -117,8 +109,9 @@ export const matchComments = pgTable("match_comments", {
   matchId: uuid("match_id")
     .notNull()
     .references(() => matches.id, { onDelete: "cascade" }),
-  viewerId: text("viewer_id").notNull(),
+  userId: text("user_id").notNull(),
   authorName: text("author_name").notNull(),
+  authorImageUrl: text("author_image_url"),
   body: text("body").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });

@@ -10,7 +10,7 @@ function makeState(overrides: Partial<MatchState["match"]> = {}): MatchState {
       teamBName: "Riverside",
       tossWinner: "a",
       electedTo: "bat",
-      scorerPinHash: "hash",
+      createdByUserId: "user-1",
       status: "completed",
       createdAt: new Date(),
       ...overrides,

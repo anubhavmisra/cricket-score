@@ -23,8 +23,8 @@
     "db:studio:local": "drizzle-kit studio --config=drizzle.config.sqlite.ts"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.5.7",
     "@neondatabase/serverless": "^1.1.0",
-    "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.11.1",
     "drizzle-orm": "^0.45.2",
     "idb": "^8.0.3",
@@ -36,7 +36,6 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",

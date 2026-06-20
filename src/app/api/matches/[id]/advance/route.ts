@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
 import { matches, innings } from "@/db/schema";
-import { getScorerMatchId } from "@/lib/auth/scorer-session";
+import { requireMatchOwner } from "@/lib/auth/match-access";
 import { buildMatchState } from "@/lib/match/build-match-state";
 import { setOpeningPlayers } from "@/lib/match/set-opening-players";
 
@@ -18,12 +18,11 @@ const bodySchema = z.object({
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  if ((await getScorerMatchId()) !== id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const access = await requireMatchOwner(id);
+  if ("error" in access) return access.error;
 
   const parsed = bodySchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

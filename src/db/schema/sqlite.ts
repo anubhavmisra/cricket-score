@@ -8,7 +8,7 @@ export const matches = sqliteTable("matches", {
   teamBName: text("team_b_name").notNull(),
   tossWinner: text("toss_winner").notNull().$type<"a" | "b">(),
   electedTo: text("elected_to").notNull().$type<"bat" | "bowl">(),
-  scorerPinHash: text("scorer_pin_hash").notNull(),
+  createdByUserId: text("created_by_user_id"),
   status: text("status")
     .notNull()
     .default("innings_1")
@@ -81,16 +81,6 @@ export const deliveries = sqliteTable(
   (table) => [uniqueIndex("deliveries_client_event_id_idx").on(table.clientEventId)],
 );
 
-export const scorerSessions = sqliteTable("scorer_sessions", {
-  token: text("token")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  matchId: text("match_id")
-    .notNull()
-    .references(() => matches.id, { onDelete: "cascade" }),
-  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
-});
-
 export const matchLikes = sqliteTable(
   "match_likes",
   {
@@ -100,12 +90,12 @@ export const matchLikes = sqliteTable(
     matchId: text("match_id")
       .notNull()
       .references(() => matches.id, { onDelete: "cascade" }),
-    viewerId: text("viewer_id").notNull(),
+    userId: text("user_id").notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()
       .$defaultFn(() => new Date()),
   },
-  (table) => [uniqueIndex("match_likes_match_viewer_idx").on(table.matchId, table.viewerId)],
+  (table) => [uniqueIndex("match_likes_match_user_idx").on(table.matchId, table.userId)],
 );
 
 export const matchComments = sqliteTable("match_comments", {
@@ -115,8 +105,9 @@ export const matchComments = sqliteTable("match_comments", {
   matchId: text("match_id")
     .notNull()
     .references(() => matches.id, { onDelete: "cascade" }),
-  viewerId: text("viewer_id").notNull(),
+  userId: text("user_id").notNull(),
   authorName: text("author_name").notNull(),
+  authorImageUrl: text("author_image_url"),
   body: text("body").notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()

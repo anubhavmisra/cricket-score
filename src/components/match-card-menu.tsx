@@ -8,8 +8,6 @@ import { focusRing } from "@/lib/ui/styles";
 type MatchCardMenuProps = {
   matchId: string;
   state: MatchState | null;
-  isScorer: boolean;
-  onStartScoring: () => void;
 };
 
 function MoreIcon() {
@@ -20,7 +18,7 @@ function MoreIcon() {
   );
 }
 
-export function MatchCardMenu({ matchId, state, isScorer, onStartScoring }: MatchCardMenuProps) {
+export function MatchCardMenu({ matchId, state }: MatchCardMenuProps) {
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -30,7 +28,6 @@ export function MatchCardMenu({ matchId, state, isScorer, onStartScoring }: Matc
 
   const isCompleted = state?.match.status === "completed";
   const shareLabel = isCompleted ? "Share result" : "Share match";
-  const showStartScoring = !isScorer && state?.match.status !== "completed";
 
   function updateMenuPosition() {
     const button = buttonRef.current;
@@ -87,11 +84,6 @@ export function MatchCardMenu({ matchId, state, isScorer, onStartScoring }: Matc
     setShareOpen(true);
   }
 
-  function handleStartScoring() {
-    setMenuOpen(false);
-    onStartScoring();
-  }
-
   return (
     <>
       <div ref={rootRef} className="relative shrink-0">
@@ -123,16 +115,6 @@ export function MatchCardMenu({ matchId, state, isScorer, onStartScoring }: Matc
             >
               {shareLabel}
             </button>
-            {showStartScoring && (
-              <button
-                type="button"
-                role="menuitem"
-                onClick={handleStartScoring}
-                className={`${focusRing} block w-full px-4 py-2.5 text-left text-sm font-medium text-foreground hover:bg-[var(--surface-muted)]`}
-              >
-                Start scoring
-              </button>
-            )}
           </div>
         )}
       </div>

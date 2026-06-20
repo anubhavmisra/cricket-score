@@ -1,10 +1,10 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Scoreboard } from "./scoreboard";
 import type { MatchState } from "@/lib/match/match-state";
 import { MatchCardMenu } from "./match-card-menu";
-import { PinUnlockModal } from "./pin-unlock-modal";
 import { BallPad } from "./ball-pad";
 import { StartSecondInningsFlow } from "./start-second-innings-flow";
 import { FullScorecard } from "./full-scorecard";
@@ -16,19 +16,6 @@ import { alertWarning, pageShell, matchPanel } from "@/lib/ui/styles";
 
 const VIEWER_POLL_MS = 5000;
 const SCORER_POLL_MS = 2000;
-
-function scorerStorageKey(matchId: string) {
-  return `scorer-${matchId}`;
-}
-
-function readScorerFlag(matchId: string): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return localStorage.getItem(scorerStorageKey(matchId)) === "true";
-  } catch {
-    return false;
-  }
-}
 
 async function postAdvance(
   matchId: string,
@@ -50,19 +37,20 @@ export function MatchView({
   matchId: string;
   initialState?: MatchState | null;
 }) {
+  const { userId, isSignedIn } = useAuth();
   const [state, setState] = useState<MatchState | null>(initialState);
   const [error, setError] = useState(false);
-  const [isScorer, setIsScorer] = useState(() => readScorerFlag(matchId));
-  const [showPinModal, setShowPinModal] = useState(false);
   const [viewTab, setViewTab] = useState<MatchViewTab>("live");
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== "undefined" ? !navigator.onLine : false,
   );
   const completingRef = useRef(false);
 
-  useEffect(() => {
-    setIsScorer(readScorerFlag(matchId));
-  }, [matchId]);
+  const isScorer =
+    isSignedIn &&
+    !!userId &&
+    !!state?.match.createdByUserId &&
+    state.match.createdByUserId === userId;
 
   useEffect(() => {
     function handleOnline() {
@@ -199,16 +187,6 @@ export function MatchView({
       });
   }, [isScorer, state, matchId, refreshState]);
 
-  function handleUnlocked() {
-    setIsScorer(true);
-    setShowPinModal(false);
-    try {
-      localStorage.setItem(scorerStorageKey(matchId), "true");
-    } catch {
-      // localStorage may be unavailable in some contexts.
-    }
-  }
-
   async function handleStartSecondInnings(payload: {
     battingTeam: "a" | "b";
     openingStrikerId: string;
@@ -223,15 +201,6 @@ export function MatchView({
   }
 
   if (!state) {
-    const cardMenu = (
-      <MatchCardMenu
-        matchId={matchId}
-        state={null}
-        isScorer={isScorer}
-        onStartScoring={() => setShowPinModal(true)}
-      />
-    );
-
     return (
       <main className={pageShell}>
         <section className={matchPanel}>
@@ -239,27 +208,14 @@ export function MatchView({
             <p className="text-muted motion-safe:animate-pulse motion-reduce:animate-none" role="status" aria-live="polite">
               Loading match…
             </p>
-            {cardMenu}
+            <MatchCardMenu matchId={matchId} state={null} />
           </div>
         </section>
-        <PinUnlockModal
-          matchId={matchId}
-          open={showPinModal}
-          onClose={() => setShowPinModal(false)}
-          onUnlocked={handleUnlocked}
-        />
       </main>
     );
   }
 
-  const cardMenu = (
-    <MatchCardMenu
-      matchId={matchId}
-      state={state}
-      isScorer={isScorer}
-      onStartScoring={() => setShowPinModal(true)}
-    />
-  );
+  const cardMenu = <MatchCardMenu matchId={matchId} state={state} />;
 
   const breakActive = isInningsBreak(state);
   const showBallPad =
@@ -298,13 +254,6 @@ export function MatchView({
       {showBallPad && (
         <BallPad matchId={matchId} state={state} onDeliveryRecorded={syncDeliveries} />
       )}
-
-      <PinUnlockModal
-        matchId={matchId}
-        open={showPinModal}
-        onClose={() => setShowPinModal(false)}
-        onUnlocked={handleUnlocked}
-      />
     </main>
   );
 }

@@ -1,28 +1,34 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { auth } from "@clerk/nextjs/server";
 import {
   addMatchComment,
   getMatchEngagement,
   toggleMatchLike,
 } from "@/lib/match/engagement";
+import { getClerkAuthorProfile, unauthorized } from "@/lib/auth/match-access";
+
+const commentBodySchema = z.object({
+  action: z.literal("comment"),
+  body: z.string().min(1).max(500),
+});
+
+const likeBodySchema = z.object({
+  action: z.literal("like"),
+});
 
 const engagementActionSchema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("like"), viewerId: z.string().min(1).max(64) }),
-  z.object({
-    action: z.literal("comment"),
-    viewerId: z.string().min(1).max(64),
-    authorName: z.string().min(1).max(40),
-    body: z.string().min(1).max(500),
-  }),
+  likeBodySchema,
+  commentBodySchema,
 ]);
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const viewerId = new URL(request.url).searchParams.get("viewerId") ?? undefined;
-  const engagement = await getMatchEngagement(id, viewerId);
+  const { userId } = await auth();
+  const engagement = await getMatchEngagement(id, userId ?? undefined);
   if (!engagement) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(engagement);
 }
@@ -32,6 +38,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const profile = await getClerkAuthorProfile();
+  if (!profile) return unauthorized();
 
   let body: unknown;
   try {
@@ -45,20 +53,19 @@ export async function POST(
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const payload = parsed.data;
-
-  if (payload.action === "comment") {
+  if (parsed.data.action === "comment") {
     const engagement = await addMatchComment(
       id,
-      payload.viewerId,
-      payload.authorName,
-      payload.body,
+      profile.userId,
+      profile.authorName,
+      profile.authorImageUrl,
+      parsed.data.body,
     );
     if (!engagement) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(engagement);
   }
 
-  const engagement = await toggleMatchLike(id, payload.viewerId);
+  const engagement = await toggleMatchLike(id, profile.userId);
   if (!engagement) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(engagement);
 }

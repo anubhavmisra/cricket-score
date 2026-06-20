@@ -38,7 +38,6 @@ export function CreateMatchForm() {
   const [openingStrikerIndex, setOpeningStrikerIndex] = useState(0);
   const [openingNonStrikerIndex, setOpeningNonStrikerIndex] = useState(1);
   const [openingBowlerIndex, setOpeningBowlerIndex] = useState(0);
-  const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,6 +68,7 @@ export function CreateMatchForm() {
       const res = await fetch("/api/matches", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           teamAName: teamAName.trim(),
           teamBName: teamBName.trim(),
@@ -79,13 +79,16 @@ export function CreateMatchForm() {
           openingStrikerIndex,
           openingNonStrikerIndex,
           openingBowlerIndex,
-          pin,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
+        if (res.status === 401) {
+          setError("Sign in to create a match.");
+          return;
+        }
         setError(formatApiError(data.error));
         return;
       }
@@ -268,25 +271,6 @@ export function CreateMatchForm() {
               </option>
             ))}
           </select>
-        </label>
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <h2 className={sectionTitle}>Scorer PIN</h2>
-        <label className="flex flex-col gap-1">
-          <span className={labelText}>4–6 digit PIN to unlock scoring</span>
-          <input
-            type="password"
-            inputMode="numeric"
-            pattern="\d{4,6}"
-            required
-            minLength={4}
-            maxLength={6}
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            placeholder="••••"
-            className={`${fieldClass} tracking-widest`}
-          />
         </label>
       </section>
 

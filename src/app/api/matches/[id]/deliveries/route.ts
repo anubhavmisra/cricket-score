@@ -1,19 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getScorerMatchId } from "@/lib/auth/scorer-session";
+import { requireMatchOwner } from "@/lib/auth/match-access";
 import { deliveryPayloadSchema, insertDeliveriesBatch } from "@/lib/match/insert-deliveries";
 
 const batchSchema = z.object({ deliveries: z.array(deliveryPayloadSchema).min(1) });
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const scorerMatchId = await getScorerMatchId();
-  if (scorerMatchId !== id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const access = await requireMatchOwner(id);
+  if ("error" in access) return access.error;
 
   const body = batchSchema.safeParse(await request.json());
   if (!body.success) {

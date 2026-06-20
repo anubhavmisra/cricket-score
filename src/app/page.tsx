@@ -1,12 +1,14 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import { MatchList } from "@/components/match-list";
-import { listMatches } from "@/lib/match/list-matches";
+import { listMatchesForUser } from "@/lib/match/list-matches";
 import { btnPrimary, pageShell, sectionTitle } from "@/lib/ui/styles";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const matches = await listMatches();
+  const { userId } = await auth();
+  const matches = await listMatchesForUser(userId!);
 
   return (
     <main className={`${pageShell} flex flex-col gap-6 py-6`}>

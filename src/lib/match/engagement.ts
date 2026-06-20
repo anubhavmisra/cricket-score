@@ -5,6 +5,7 @@ import { matchComments, matchLikes, matches } from "@/db/schema";
 export type MatchComment = {
   id: string;
   authorName: string;
+  authorImageUrl: string | null;
   body: string;
   createdAt: string;
   isOwn: boolean;
@@ -12,7 +13,7 @@ export type MatchComment = {
 
 export type MatchEngagement = {
   likeCount: number;
-  likedByViewer: boolean;
+  likedByUser: boolean;
   commentCount: number;
   comments: MatchComment[];
 };
@@ -25,7 +26,7 @@ async function matchExists(matchId: string): Promise<boolean> {
 
 export async function getMatchEngagement(
   matchId: string,
-  viewerId?: string,
+  userId?: string,
 ): Promise<MatchEngagement | null> {
   if (!(await matchExists(matchId))) return null;
 
@@ -36,14 +37,14 @@ export async function getMatchEngagement(
     .from(matchLikes)
     .where(eq(matchLikes.matchId, matchId));
 
-  let likedByViewer = false;
-  if (viewerId) {
+  let likedByUser = false;
+  if (userId) {
     const liked = await db
       .select({ id: matchLikes.id })
       .from(matchLikes)
-      .where(and(eq(matchLikes.matchId, matchId), eq(matchLikes.viewerId, viewerId)))
+      .where(and(eq(matchLikes.matchId, matchId), eq(matchLikes.userId, userId)))
       .limit(1);
-    likedByViewer = liked.length > 0;
+    likedByUser = liked.length > 0;
   }
 
   const commentRows = await db
@@ -56,14 +57,15 @@ export async function getMatchEngagement(
   const comments: MatchComment[] = commentRows.map((row) => ({
     id: row.id,
     authorName: row.authorName,
+    authorImageUrl: row.authorImageUrl ?? null,
     body: row.body,
     createdAt: row.createdAt.toISOString(),
-    isOwn: viewerId ? row.viewerId === viewerId : false,
+    isOwn: userId ? row.userId === userId : false,
   }));
 
   return {
     likeCount: likeCountRow?.value ?? 0,
-    likedByViewer,
+    likedByUser,
     commentCount: comments.length,
     comments,
   };
@@ -71,7 +73,7 @@ export async function getMatchEngagement(
 
 export async function toggleMatchLike(
   matchId: string,
-  viewerId: string,
+  userId: string,
 ): Promise<MatchEngagement | null> {
   if (!(await matchExists(matchId))) return null;
 
@@ -79,22 +81,23 @@ export async function toggleMatchLike(
   const existing = await db
     .select({ id: matchLikes.id })
     .from(matchLikes)
-    .where(and(eq(matchLikes.matchId, matchId), eq(matchLikes.viewerId, viewerId)))
+    .where(and(eq(matchLikes.matchId, matchId), eq(matchLikes.userId, userId)))
     .limit(1);
 
   if (existing.length > 0) {
     await db.delete(matchLikes).where(eq(matchLikes.id, existing[0]!.id));
   } else {
-    await db.insert(matchLikes).values({ matchId, viewerId });
+    await db.insert(matchLikes).values({ matchId, userId });
   }
 
-  return getMatchEngagement(matchId, viewerId);
+  return getMatchEngagement(matchId, userId);
 }
 
 export async function addMatchComment(
   matchId: string,
-  viewerId: string,
+  userId: string,
   authorName: string,
+  authorImageUrl: string | null,
   body: string,
 ): Promise<MatchEngagement | null> {
   if (!(await matchExists(matchId))) return null;
@@ -102,10 +105,11 @@ export async function addMatchComment(
   const db = getDb();
   await db.insert(matchComments).values({
     matchId,
-    viewerId,
-    authorName: authorName.trim().slice(0, 40) || "Spectator",
+    userId,
+    authorName: authorName.trim().slice(0, 40) || "User",
+    authorImageUrl,
     body: body.trim().slice(0, 500),
   });
 
-  return getMatchEngagement(matchId, viewerId);
+  return getMatchEngagement(matchId, userId);
 }

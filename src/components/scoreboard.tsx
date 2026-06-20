@@ -1,6 +1,7 @@
 import type { innings, matches, players } from "@/db/schema";
 import type { BowlerStats, InningsState, PlayerStats } from "@/lib/cricket/types";
 import { computeMatchResult, isInningsBreak } from "@/lib/cricket/match-result";
+import { sectionLabel } from "@/lib/ui/styles";
 
 export type MatchState = {
   match: typeof matches.$inferSelect;
@@ -68,18 +69,16 @@ function InningsSummary({
   const teamName = getTeamName(state, innMeta.battingTeam);
 
   return (
-    <section className="rounded-xl border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-950">
-      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+    <div className="border-t border-border px-4 py-3 first:border-t-0">
+      <p className={sectionLabel}>
         {inningsNumber === 1 ? "1st" : "2nd"} innings · {teamName}
       </p>
-      <p className="mt-1 text-2xl font-bold tabular-nums">
+      <p className="mt-1 text-2xl font-bold tabular-nums text-foreground">
         {innState.totalRuns}/{innState.wickets}
-        <span className="ml-2 text-base font-normal text-gray-600 dark:text-gray-400">
-          ({innState.oversDisplay} ov)
-        </span>
+        <span className="ml-2 text-base font-normal text-muted">({innState.oversDisplay} ov)</span>
       </p>
-      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">RR {innState.runRate.toFixed(2)}</p>
-    </section>
+      <p className="mt-1 text-sm text-muted">RR {innState.runRate.toFixed(2)}</p>
+    </div>
   );
 }
 
@@ -88,12 +87,16 @@ function MatchResultBanner({ state }: { state: MatchState }) {
   if (!result || state.match.status !== "completed") return null;
 
   return (
-    <div className="rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-center dark:border-green-800 dark:bg-green-950">
-      <p className="text-lg font-bold text-green-900 dark:text-green-100">
+    <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-bg)] px-4 py-3 text-center">
+      <p className="text-lg font-bold text-[var(--success-text)]">
         {result.winnerName} won by {result.margin}
       </p>
     </div>
   );
+}
+
+function ScoreDivider() {
+  return <div className="border-t border-border" role="separator" />;
 }
 
 export function Scoreboard({ state }: { state: MatchState }) {
@@ -102,7 +105,7 @@ export function Scoreboard({ state }: { state: MatchState }) {
   const active = state.innings[activeIndex];
 
   if (!active && !breakActive) {
-    return <p className="text-sm text-gray-600 dark:text-gray-400">No innings data yet.</p>;
+    return <p className="text-sm text-muted">No innings data yet.</p>;
   }
 
   const statusLabel = getStatusLabel(state);
@@ -120,45 +123,47 @@ export function Scoreboard({ state }: { state: MatchState }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="sticky top-0 z-10 -mx-4 border-b border-gray-200 bg-[var(--background)]/95 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm dark:border-gray-800">
+      <div className="sticky top-0 z-[var(--z-sticky)] -mx-4 border-b border-border bg-[var(--background)] px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <header className="text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="truncate text-sm text-muted">
             {state.match.teamAName} vs {state.match.teamBName}
           </p>
           {statusLabel && (
-            <p className="mt-1 text-sm font-medium text-amber-700 dark:text-amber-400">{statusLabel}</p>
+            <p className="mt-1 text-sm font-medium text-[var(--warning-text)]">{statusLabel}</p>
           )}
         </header>
 
         {showLiveCard && innState && innMeta && (
-          <section className="mt-3 rounded-xl border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-950">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{battingTeamName}</p>
-            <p className="mt-1 text-3xl font-bold tabular-nums">
+          <div className="mt-3 text-center">
+            <p className={`${sectionLabel} truncate`}>{battingTeamName}</p>
+            <p className="mt-1 text-4xl font-bold tabular-nums text-foreground">
               {innState.totalRuns}/{innState.wickets}
-              <span className="ml-2 text-lg font-normal text-gray-600 dark:text-gray-400">
-                ({innState.oversDisplay} ov)
-              </span>
+              <span className="ml-2 text-xl font-normal text-muted">({innState.oversDisplay} ov)</span>
             </p>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-1 text-sm text-muted">
               RR {innState.runRate.toFixed(2)}
               {innMeta.target != null && <span className="ml-3">Target {innMeta.target}</span>}
             </p>
             {innState.isFreeHit && (
-              <p className="mt-1 text-sm font-medium text-orange-600 dark:text-orange-400">Free hit</p>
+              <p className="mt-1 text-sm font-medium text-[var(--warning-text)]">Free hit</p>
             )}
-          </section>
+          </div>
         )}
       </div>
 
       <MatchResultBanner state={state} />
 
-      {breakActive && <InningsSummary state={state} inningsNumber={1} />}
+      {breakActive && (
+        <div className="overflow-hidden rounded-xl border border-border bg-surface">
+          <InningsSummary state={state} inningsNumber={1} />
+        </div>
+      )}
 
       {showLiveCard && (
-        <>
-          <section className="rounded-xl border border-gray-300 p-4 dark:border-gray-600">
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Batting</h2>
-            <ul className="flex flex-col gap-1 text-sm">
+        <div className="overflow-hidden rounded-xl border border-border bg-surface">
+          <div className="px-4 py-3">
+            <p className={sectionLabel}>Batting</p>
+            <ul className="mt-2 flex flex-col gap-1 text-sm text-foreground">
               {strikerStats && innState && (
                 <li className="font-medium">
                   {formatBatsmanLine(
@@ -178,62 +183,64 @@ export function Scoreboard({ state }: { state: MatchState }) {
                 </li>
               )}
             </ul>
-          </section>
+          </div>
 
-          <section className="rounded-xl border border-gray-300 p-4 dark:border-gray-600">
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
-              Bowling · {bowlingTeamName}
-            </h2>
+          <ScoreDivider />
+
+          <div className="px-4 py-3">
+            <p className={sectionLabel}>Bowling · {bowlingTeamName}</p>
             {bowlerStats && innState ? (
-              <p className="text-sm">
+              <p className="mt-2 text-sm text-foreground">
                 {formatBowlerLine(bowlerStats, getPlayerName(state.players, innState.bowlerId))}
               </p>
             ) : (
-              <p className="text-sm text-gray-600 dark:text-gray-400">—</p>
+              <p className="mt-2 text-sm text-muted">—</p>
             )}
-          </section>
+          </div>
 
           {innState && innState.fallOfWickets.length > 0 && (
-            <section className="rounded-xl border border-gray-300 p-4 dark:border-gray-600">
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
-                Fall of wickets
-              </h2>
-              <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                {innState.fallOfWickets.map((fow, i) => {
-                  const name = getPlayerName(state.players, fow.playerId);
-                  const over = `${fow.over}.${fow.ball}`;
-                  return (
-                    <span key={`${fow.wicket}-${fow.playerId}`}>
-                      {i > 0 && " · "}
-                      {fow.wicket}-{fow.runs} {name} ({over})
-                    </span>
-                  );
-                })}
-              </p>
-            </section>
+            <>
+              <ScoreDivider />
+              <div className="px-4 py-3">
+                <p className={sectionLabel}>Fall of wickets</p>
+                <p className="mt-2 text-sm leading-relaxed text-foreground">
+                  {innState.fallOfWickets.map((fow, i) => {
+                    const name = getPlayerName(state.players, fow.playerId);
+                    const over = `${fow.over}.${fow.ball}`;
+                    return (
+                      <span key={`${fow.wicket}-${fow.playerId}`}>
+                        {i > 0 && " · "}
+                        {fow.wicket}-{fow.runs} {name} ({over})
+                      </span>
+                    );
+                  })}
+                </p>
+              </div>
+            </>
           )}
-        </>
+        </div>
       )}
 
       {state.match.status === "completed" && (
-        <>
+        <div className="overflow-hidden rounded-xl border border-border bg-surface">
           <InningsSummary state={state} inningsNumber={1} />
+          <ScoreDivider />
           <InningsSummary state={state} inningsNumber={2} />
-        </>
+        </div>
       )}
 
       {state.innings.length > 1 && activeIndex === 1 && state.innings[0] && showLiveCard && (
-        <section className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+        <div className="rounded-xl border border-border bg-[var(--surface-muted)] px-4 py-3">
+          <p className={sectionLabel}>
             1st innings · {getTeamName(state, state.innings[0].innings.battingTeam)}
           </p>
-          <p className="mt-1 text-lg font-semibold tabular-nums">
+          <p className="mt-1 text-lg font-semibold tabular-nums text-foreground">
             {state.innings[0].state.totalRuns}/{state.innings[0].state.wickets}
-            <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
+            <span className="ml-2 text-sm font-normal text-muted">
               ({state.innings[0].state.oversDisplay} ov)
             </span>
           </p>
-        </section>
+        </div>
       )}
     </div>
   );

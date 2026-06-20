@@ -8,6 +8,10 @@ import { BallPad } from "./ball-pad";
 import { StartSecondInningsFlow } from "./start-second-innings-flow";
 import { getUnsynced, markSynced } from "@/lib/offline/delivery-queue";
 import { isInningsBreak, shouldCompleteMatch } from "@/lib/cricket/match-result";
+import { btnPrimary, alertWarning, pageShell } from "@/lib/ui/styles";
+
+const VIEWER_POLL_MS = 5000;
+const SCORER_POLL_MS = 2000;
 
 function scorerStorageKey(matchId: string) {
   return `scorer-${matchId}`;
@@ -113,8 +117,10 @@ export function MatchView({ matchId }: { matchId: string }) {
 
   useEffect(() => {
     let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
     async function poll() {
+      if (document.hidden) return;
       try {
         const res = await fetch(`/api/matches/${matchId}`);
         if (!res.ok) throw new Error("fail");
@@ -128,13 +134,40 @@ export function MatchView({ matchId }: { matchId: string }) {
       }
     }
 
-    poll();
-    const id = setInterval(poll, 2000);
+    function startPolling() {
+      if (intervalId) clearInterval(intervalId);
+      void poll();
+      const intervalMs = isScorer ? SCORER_POLL_MS : VIEWER_POLL_MS;
+      intervalId = setInterval(poll, intervalMs);
+    }
+
+    function stopPolling() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }
+
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        startPolling();
+      }
+    }
+
+    if (!document.hidden) {
+      startPolling();
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       cancelled = true;
-      clearInterval(id);
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [matchId]);
+  }, [matchId, isScorer]);
 
   useEffect(() => {
     if (!isScorer || !state || state.match.status === "completed") return;
@@ -175,7 +208,15 @@ export function MatchView({ matchId }: { matchId: string }) {
     if (ok) await refreshState();
   }
 
-  if (!state) return <p className="p-4">Loading…</p>;
+  if (!state) {
+    return (
+      <main className={pageShell}>
+        <p className="text-muted motion-safe:animate-pulse motion-reduce:animate-none" role="status" aria-live="polite">
+          Loading match…
+        </p>
+      </main>
+    );
+  }
 
   const breakActive = isInningsBreak(state);
   const showBallPad =
@@ -185,14 +226,18 @@ export function MatchView({ matchId }: { matchId: string }) {
     state.match.status !== "innings_break";
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.5rem,env(safe-area-inset-top))]">
+    <main className={pageShell}>
       <ShareLinkBar matchId={matchId} />
       {isScorer && isOffline && (
-        <p className="mb-3 rounded-lg bg-amber-100 px-3 py-2 text-center text-sm font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          Offline — saving locally
+        <p role="status" className={`${alertWarning} mb-3`}>
+          Offline: saving locally
         </p>
       )}
-      {error && <p className="mb-3 text-sm text-amber-600 dark:text-amber-400">Reconnecting…</p>}
+      {error && (
+        <p role="status" className="mb-3 text-sm text-[var(--warning-text)]">
+          Reconnecting…
+        </p>
+      )}
       <Scoreboard state={state} />
 
       {breakActive && isScorer && (
@@ -203,9 +248,9 @@ export function MatchView({ matchId }: { matchId: string }) {
         <button
           type="button"
           onClick={() => setShowPinModal(true)}
-          className="mt-6 w-full min-h-12 rounded-xl bg-green-600 px-6 py-4 text-lg font-semibold text-white"
+          className={`${btnPrimary} mt-6 w-full min-h-12`}
         >
-          Start Scoring
+          Start scoring
         </button>
       )}
 
@@ -219,6 +264,6 @@ export function MatchView({ matchId }: { matchId: string }) {
         onClose={() => setShowPinModal(false)}
         onUnlocked={handleUnlocked}
       />
-    </div>
+    </main>
   );
 }

@@ -6,6 +6,7 @@ import { PlayerPicker } from "./player-picker";
 import { WicketPicker } from "./wicket-picker";
 import type { ExtraType, WicketType } from "@/lib/cricket/types";
 import { enqueueDelivery } from "@/lib/offline/delivery-queue";
+import { btnBall, btnBallExtra, btnBallUndo, btnDanger, sectionLabel } from "@/lib/ui/styles";
 
 type DeliveryRow = {
   sequence: number;
@@ -264,28 +265,28 @@ export function BallPad({ matchId: _matchId, state, onDeliveryRecorded }: BallPa
 
     if (!latest) return;
 
-    const ids = getCurrentIds();
-    if (!ids) return;
+    const currentIds = getCurrentIds();
+    if (!currentIds) return;
 
     setRecording(true);
     try {
       const clientEventId = crypto.randomUUID();
       const fullPayload: DeliveryPayload = {
         clientEventId,
-        inningsId: ids.inningsId,
+        inningsId: currentIds.inningsId,
         runsOffBat: 0,
         extraRuns: 0,
         isWicket: false,
-        strikerId: ids.strikerId,
-        nonStrikerId: ids.nonStrikerId,
-        bowlerId: ids.bowlerId,
+        strikerId: currentIds.strikerId,
+        nonStrikerId: currentIds.nonStrikerId,
+        bowlerId: currentIds.bowlerId,
         isUndo: true,
         undoesSequence: latest.sequence,
       };
 
       await enqueueDelivery({
         clientEventId,
-        inningsId: ids.inningsId,
+        inningsId: currentIds.inningsId,
         payload: fullPayload,
         synced: false,
       });
@@ -295,22 +296,20 @@ export function BallPad({ matchId: _matchId, state, onDeliveryRecorded }: BallPa
     }
   }
 
-  const buttonClass =
-    "min-h-[48px] rounded-xl px-2 py-3 text-lg font-bold transition-colors active:scale-95 disabled:cursor-not-allowed disabled:opacity-50";
-
   return (
     <div className="mt-6">
-      <h2 className="mb-3 text-center text-sm font-semibold uppercase tracking-wide text-gray-500">
-        Record ball
-      </h2>
-      <div className="grid grid-cols-3 gap-2">
+      <h2 className={`${sectionLabel} mb-3 text-center`}>Record ball</h2>
+      <div
+        className={`grid grid-cols-3 gap-2 ${recording ? "pointer-events-none opacity-60" : ""}`}
+        aria-busy={recording}
+      >
         {([0, 1, 2, 3, 4, 6] as const).map((runs) => (
           <button
             key={runs}
             type="button"
             disabled={recording}
             onClick={() => handleRun(runs)}
-            className={`${buttonClass} bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600`}
+            className={btnBall}
           >
             {runs}
           </button>
@@ -319,7 +318,7 @@ export function BallPad({ matchId: _matchId, state, onDeliveryRecorded }: BallPa
           type="button"
           disabled={recording}
           onClick={() => handleExtra("wide")}
-          className={`${buttonClass} bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-200 border border-blue-200 dark:border-blue-800`}
+          className={btnBallExtra}
         >
           Wide
         </button>
@@ -327,7 +326,7 @@ export function BallPad({ matchId: _matchId, state, onDeliveryRecorded }: BallPa
           type="button"
           disabled={recording}
           onClick={() => handleExtra("noball")}
-          className={`${buttonClass} bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-200 border border-blue-200 dark:border-blue-800`}
+          className={btnBallExtra}
         >
           No ball
         </button>
@@ -335,7 +334,7 @@ export function BallPad({ matchId: _matchId, state, onDeliveryRecorded }: BallPa
           type="button"
           disabled={recording}
           onClick={() => setShowWicketPicker(true)}
-          className={`${buttonClass} bg-red-600 text-white`}
+          className={`${btnDanger} min-h-[48px] px-2 py-3 text-lg`}
         >
           W
         </button>
@@ -343,7 +342,7 @@ export function BallPad({ matchId: _matchId, state, onDeliveryRecorded }: BallPa
           type="button"
           disabled={recording}
           onClick={handleUndo}
-          className={`${buttonClass} col-span-3 border border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200`}
+          className={`${btnBallUndo} col-span-3`}
         >
           Undo
         </button>

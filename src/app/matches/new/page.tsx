@@ -1,9 +1,10 @@
 import { CreateMatchForm } from "@/components/create-match-form";
+import { pageShell, pageTitle } from "@/lib/ui/styles";
 
 export default function NewMatchPage() {
   return (
-    <main className="mx-auto max-w-lg p-4">
-      <h1 className="mb-4 text-2xl font-bold">New T20 Match</h1>
+    <main className={pageShell}>
+      <h1 className={`${pageTitle} mb-4`}>New T20 match</h1>
       <CreateMatchForm />
     </main>
   );

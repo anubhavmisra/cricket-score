@@ -1,5 +1,9 @@
 "use client";
 
+import { useId } from "react";
+import { DialogShell } from "@/components/ui/dialog-shell";
+import { btnSecondary, focusRing } from "@/lib/ui/styles";
+
 type PlayerOption = {
   id: string;
   name: string;
@@ -15,54 +19,46 @@ type PlayerPickerProps = {
 };
 
 export function PlayerPicker({ players, title, onSelect, onCancel }: PlayerPickerProps) {
+  const titleId = useId();
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="player-picker-title"
-      onClick={onCancel}
+    <DialogShell
+      open
+      onClose={onCancel}
+      labelledBy={titleId}
+      panelClassName="flex max-h-[70vh] w-full max-w-sm flex-col rounded-2xl bg-surface shadow-xl"
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[70vh] w-full max-w-sm flex-col rounded-2xl bg-white shadow-xl dark:bg-gray-900"
-      >
-        <div className="border-b border-gray-200 p-4 dark:border-gray-700">
-          <h2 id="player-picker-title" className="text-xl font-semibold">
-            {title}
-          </h2>
-        </div>
-
-        <ul className="flex-1 overflow-y-auto p-2">
-          {players.map((player) => (
-            <li key={player.id}>
-              <button
-                type="button"
-                disabled={player.disabled}
-                onClick={() => onSelect(player.id)}
-                className="flex w-full min-h-[48px] flex-col rounded-xl px-4 py-3 text-left text-base font-medium transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800"
-              >
-                <span>{player.name}</span>
-                {player.disabled && player.disabledReason && (
-                  <span className="text-sm font-normal text-amber-600 dark:text-amber-400">
-                    {player.disabledReason}
-                  </span>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
-
-        <div className="border-t border-gray-200 p-3 dark:border-gray-700">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 font-medium dark:border-gray-600"
-          >
-            Cancel
-          </button>
-        </div>
+      <div className="border-b border-border p-4">
+        <h2 id={titleId} className="text-xl font-semibold text-foreground">
+          {title}
+        </h2>
       </div>
-    </div>
+
+      <ul className="flex-1 overflow-y-auto p-2">
+        {players.map((player) => (
+          <li key={player.id}>
+            <button
+              type="button"
+              disabled={player.disabled}
+              onClick={() => onSelect(player.id)}
+              className={`${focusRing} flex w-full min-h-[48px] flex-col rounded-xl px-4 py-3 text-left text-base font-medium transition-[color,background-color] duration-150 ease-[var(--ease-out)] hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50`}
+            >
+              <span>{player.name}</span>
+              {player.disabled && player.disabledReason && (
+                <span className="text-sm font-normal text-[var(--warning-text)]">
+                  {player.disabledReason}
+                </span>
+              )}
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <div className="border-t border-border p-3">
+        <button type="button" onClick={onCancel} className={`${btnSecondary} w-full`}>
+          Cancel
+        </button>
+      </div>
+    </DialogShell>
   );
 }

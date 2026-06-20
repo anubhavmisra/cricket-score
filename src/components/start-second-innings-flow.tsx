@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { MatchState } from "./scoreboard";
 import { PlayerPicker } from "./player-picker";
+import { btnPrimary } from "@/lib/ui/styles";
 
 type StartSecondInningsFlowProps = {
   state: MatchState;
@@ -107,9 +108,9 @@ export function StartSecondInningsFlow({ state, onStart }: StartSecondInningsFlo
       type="button"
       disabled={submitting || !inn1}
       onClick={() => setStep("striker")}
-      className="mt-4 w-full min-h-12 rounded-xl bg-green-600 px-6 py-4 text-lg font-semibold text-white disabled:opacity-50"
+      className={`${btnPrimary} mt-4 w-full min-h-12`}
     >
-      Start 2nd Innings
+      Start 2nd innings
     </button>
   );
 }

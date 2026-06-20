@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Modal } from "@/components/ui/modal";
+import { btnPrimary, btnSecondary, alertError, inputField, labelText } from "@/lib/ui/styles";
 
 type PinUnlockModalProps = {
   matchId: string;
@@ -13,8 +15,6 @@ export function PinUnlockModal({ matchId, open, onClose, onUnlocked }: PinUnlock
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  if (!open) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,27 +56,16 @@ export function PinUnlockModal({ matchId, open, onClose, onUnlocked }: PinUnlock
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="pin-unlock-title"
-      onClick={handleClose}
+    <Modal
+      open={open}
+      title="Unlock scoring"
+      description="Enter the scorer PIN to record balls for this match."
+      onClose={handleClose}
+      dismissible={!loading}
     >
-      <form
-        onSubmit={handleSubmit}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-900"
-      >
-        <h2 id="pin-unlock-title" className="mb-1 text-xl font-semibold">
-          Unlock scoring
-        </h2>
-        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-          Enter the scorer PIN to record balls for this match.
-        </p>
-
+      <form onSubmit={handleSubmit}>
         <label className="mb-4 flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Scorer PIN</span>
+          <span className={labelText}>Scorer PIN</span>
           <input
             type="password"
             inputMode="numeric"
@@ -88,34 +77,25 @@ export function PinUnlockModal({ matchId, open, onClose, onUnlocked }: PinUnlock
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
             placeholder="••••"
-            className="rounded-lg border border-gray-300 px-3 py-2.5 text-base tracking-widest dark:border-gray-600 dark:bg-gray-800"
+            className={`${inputField} tracking-widest`}
           />
         </label>
 
         {error && (
-          <p role="alert" className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+          <p role="alert" className={`${alertError} mb-4`}>
             {error}
           </p>
         )}
 
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={loading}
-            className="flex-1 rounded-xl border border-gray-300 px-4 py-3 font-medium disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600"
-          >
+          <button type="button" onClick={handleClose} disabled={loading} className={`${btnSecondary} flex-1`}>
             Cancel
           </button>
-          <button
-            type="submit"
-            disabled={loading || pin.length < 4}
-            className="flex-1 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <button type="submit" disabled={loading || pin.length < 4} className={`${btnPrimary} flex-1 py-3 text-base`}>
             {loading ? "Unlocking…" : "Unlock"}
           </button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }

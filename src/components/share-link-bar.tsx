@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { btnPrimarySm, inputField, alertError } from "@/lib/ui/styles";
 
 export function ShareLinkBar({ matchId }: { matchId: string }) {
   const [url, setUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
 
   useEffect(() => {
     setUrl(`${window.location.origin}/m/${matchId}`);
@@ -12,32 +14,40 @@ export function ShareLinkBar({ matchId }: { matchId: string }) {
 
   async function copyLink() {
     if (!url) return;
+    setCopyError(false);
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard may be unavailable in some contexts.
+      setCopyError(true);
     }
   }
 
   return (
-    <div className="mb-4 flex items-center gap-2 rounded-lg border border-gray-300 bg-gray-50 p-2 dark:border-gray-600 dark:bg-gray-900">
-      <input
-        type="text"
-        readOnly
-        value={url}
-        aria-label="Share link"
-        className="min-w-0 flex-1 truncate rounded border-0 bg-transparent px-2 py-1.5 text-sm text-gray-700 dark:text-gray-300"
-      />
-      <button
-        type="button"
-        onClick={copyLink}
-        disabled={!url}
-        className="shrink-0 rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {copied ? "Copied!" : "Copy"}
-      </button>
+    <div className="mb-4">
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-[var(--surface-muted)] p-2">
+        <input
+          type="text"
+          readOnly
+          value={url}
+          aria-label="Share link"
+          className={`${inputField} min-w-0 flex-1 truncate border-0 bg-transparent px-2 py-2 text-sm`}
+        />
+        <button
+          type="button"
+          onClick={copyLink}
+          disabled={!url}
+          className={btnPrimarySm}
+        >
+          {copied ? "Copied!" : "Copy link"}
+        </button>
+      </div>
+      {copyError && (
+        <p role="alert" className={`${alertError} mt-2 text-xs`}>
+          Copy failed. Select the link manually.
+        </p>
+      )}
     </div>
   );
 }

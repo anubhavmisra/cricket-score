@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { WicketType } from "@/lib/cricket/types";
+import { DialogShell } from "@/components/ui/dialog-shell";
+import { btnDanger, btnSecondary, btnToggle } from "@/lib/ui/styles";
 
 const ALL_WICKET_TYPES: { type: WicketType; label: string }[] = [
   { type: "bowled", label: "Bowled" },
@@ -33,6 +35,7 @@ export function WicketPicker({
   onConfirm,
   onCancel,
 }: WicketPickerProps) {
+  const titleId = useId();
   const [wicketType, setWicketType] = useState<WicketType | null>(null);
   const [dismissedEnd, setDismissedEnd] = useState<"striker" | "non_striker" | null>(null);
 
@@ -54,100 +57,73 @@ export function WicketPicker({
     onConfirm(wicketType, dismissedPlayerId);
   }
 
-  const canConfirm =
-    wicketType != null && (wicketType !== "run_out" || dismissedEnd != null);
+  const canConfirm = wicketType != null && (wicketType !== "run_out" || dismissedEnd != null);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="wicket-picker-title"
-      onClick={onCancel}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-900"
-      >
-        <h2 id="wicket-picker-title" className="mb-1 text-xl font-semibold">
-          Wicket
-        </h2>
-        {isFreeHit && (
-          <p className="mb-3 text-sm text-orange-600 dark:text-orange-400">
-            Free hit — only run out or stumped allowed.
-          </p>
-        )}
+    <DialogShell open onClose={onCancel} labelledBy={titleId}>
+      <h2 id={titleId} className="mb-1 text-xl font-semibold text-foreground">
+        Wicket
+      </h2>
+      {isFreeHit && (
+        <p className="mb-3 text-sm text-[var(--warning-text)]">
+          Free hit — only run out or stumped allowed.
+        </p>
+      )}
 
-        <div className="mb-4 grid grid-cols-2 gap-2">
-          {availableTypes.map(({ type, label }) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => {
-                setWicketType(type);
-                if (type !== "run_out") setDismissedEnd(null);
-              }}
-              className={`min-h-12 rounded-xl px-3 py-3 text-sm font-semibold ${
-                wicketType === type
-                  ? "bg-red-600 text-white"
-                  : "border border-gray-300 dark:border-gray-600"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {wicketType === "run_out" && (
-          <div className="mb-4">
-            <p className="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">
-              Who was run out?
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setDismissedEnd("striker")}
-                className={`min-h-12 rounded-xl px-3 py-3 text-sm font-semibold ${
-                  dismissedEnd === "striker"
-                    ? "bg-red-600 text-white"
-                    : "border border-gray-300 dark:border-gray-600"
-                }`}
-              >
-                {strikerName}
-              </button>
-              <button
-                type="button"
-                onClick={() => setDismissedEnd("non_striker")}
-                className={`min-h-12 rounded-xl px-3 py-3 text-sm font-semibold ${
-                  dismissedEnd === "non_striker"
-                    ? "bg-red-600 text-white"
-                    : "border border-gray-300 dark:border-gray-600"
-                }`}
-              >
-                {nonStrikerName}
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className="flex gap-2">
+      <div className="mb-4 grid grid-cols-2 gap-2" role="group" aria-label="Wicket type">
+        {availableTypes.map(({ type, label }) => (
           <button
+            key={type}
             type="button"
-            onClick={onCancel}
-            className="flex-1 rounded-xl border border-gray-300 px-4 py-3 font-medium dark:border-gray-600"
+            aria-pressed={wicketType === type}
+            onClick={() => {
+              setWicketType(type);
+              if (type !== "run_out") setDismissedEnd(null);
+            }}
+            className={btnToggle(wicketType === type)}
           >
-            Cancel
+            {label}
           </button>
-          <button
-            type="button"
-            disabled={!canConfirm}
-            onClick={handleConfirm}
-            className="flex-1 rounded-xl bg-red-600 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Confirm
-          </button>
-        </div>
+        ))}
       </div>
-    </div>
+
+      {wicketType === "run_out" && (
+        <div className="mb-4">
+          <p className="mb-2 text-sm font-medium text-muted">Who was run out?</p>
+          <div className="grid grid-cols-2 gap-2" role="group" aria-label="Dismissed batsman">
+            <button
+              type="button"
+              aria-pressed={dismissedEnd === "striker"}
+              onClick={() => setDismissedEnd("striker")}
+              className={btnToggle(dismissedEnd === "striker")}
+            >
+              {strikerName}
+            </button>
+            <button
+              type="button"
+              aria-pressed={dismissedEnd === "non_striker"}
+              onClick={() => setDismissedEnd("non_striker")}
+              className={btnToggle(dismissedEnd === "non_striker")}
+            >
+              {nonStrikerName}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <button type="button" onClick={onCancel} className={`${btnSecondary} flex-1`}>
+          Cancel
+        </button>
+        <button
+          type="button"
+          disabled={!canConfirm}
+          onClick={handleConfirm}
+          className={`${btnDanger} flex-1`}
+        >
+          Confirm
+        </button>
+      </div>
+    </DialogShell>
   );
 }

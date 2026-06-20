@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { btnPrimary, focusRing, inputField, inputFieldSm, labelText, sectionTitle, alertError } from "@/lib/ui/styles";
 
 const DEFAULT_TEAM_A_PLAYERS = Array.from({ length: 11 }, (_, i) => `P${i + 1}`);
 const DEFAULT_TEAM_B_PLAYERS = Array.from({ length: 11 }, (_, i) => `Q${i + 1}`);
@@ -51,11 +52,7 @@ export function CreateMatchForm() {
   const battingTeamLabel = battingFirst === "a" ? teamAName || "Team A" : teamBName || "Team B";
   const bowlingTeamLabel = battingFirst === "a" ? teamBName || "Team B" : teamAName || "Team A";
 
-  function updatePlayer(
-    team: "a" | "b",
-    index: number,
-    value: string,
-  ) {
+  function updatePlayer(team: "a" | "b", index: number, value: string) {
     if (team === "a") {
       setTeamAPlayers((prev) => prev.map((name, i) => (i === index ? value : name)));
     } else {
@@ -101,47 +98,51 @@ export function CreateMatchForm() {
     }
   }
 
+  const fieldClass = inputField;
+  const fieldClassSm = inputFieldSm;
+  const radioClass = `${focusRing} h-4 w-4 accent-primary`;
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Teams</h2>
+        <h2 className={sectionTitle}>Teams</h2>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Team A</span>
+          <span className={labelText}>Team A</span>
           <input
             type="text"
             required
             value={teamAName}
             onChange={(e) => setTeamAName(e.target.value)}
             placeholder="Team A name"
-            className="rounded-lg border border-gray-300 px-3 py-2.5 text-base dark:border-gray-600 dark:bg-gray-900"
+            className={fieldClass}
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Team B</span>
+          <span className={labelText}>Team B</span>
           <input
             type="text"
             required
             value={teamBName}
             onChange={(e) => setTeamBName(e.target.value)}
             placeholder="Team B name"
-            className="rounded-lg border border-gray-300 px-3 py-2.5 text-base dark:border-gray-600 dark:bg-gray-900"
+            className={fieldClass}
           />
         </label>
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Team A players</h2>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <h2 className={sectionTitle}>Team A players</h2>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
           {teamAPlayers.map((name, i) => (
             <label key={`a-${i}`} className="flex flex-col gap-0.5">
-              <span className="text-xs text-gray-500">#{i + 1}</span>
+              <span className="text-xs text-muted">#{i + 1}</span>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => updatePlayer("a", i, e.target.value)}
                 placeholder={`P${i + 1}`}
-                className="rounded-lg border border-gray-300 px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900"
+                className={fieldClassSm}
               />
             </label>
           ))}
@@ -149,18 +150,18 @@ export function CreateMatchForm() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Team B players</h2>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <h2 className={sectionTitle}>Team B players</h2>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
           {teamBPlayers.map((name, i) => (
             <label key={`b-${i}`} className="flex flex-col gap-0.5">
-              <span className="text-xs text-gray-500">#{i + 1}</span>
+              <span className="text-xs text-muted">#{i + 1}</span>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => updatePlayer("b", i, e.target.value)}
                 placeholder={`Q${i + 1}`}
-                className="rounded-lg border border-gray-300 px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900"
+                className={fieldClassSm}
               />
             </label>
           ))}
@@ -168,57 +169,53 @@ export function CreateMatchForm() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Toss</h2>
+        <h2 className={sectionTitle}>Toss</h2>
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-medium text-gray-600 dark:text-gray-400">
-            Toss winner
-          </legend>
-          <label className="flex items-center gap-2">
+          <legend className={`${labelText} mb-1`}>Toss winner</legend>
+          <label className="flex min-h-11 items-center gap-2">
             <input
               type="radio"
               name="tossWinner"
               value="a"
               checked={tossWinner === "a"}
               onChange={() => setTossWinner("a")}
-              className="h-4 w-4"
+              className={radioClass}
             />
             <span>{teamAName || "Team A"}</span>
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex min-h-11 items-center gap-2">
             <input
               type="radio"
               name="tossWinner"
               value="b"
               checked={tossWinner === "b"}
               onChange={() => setTossWinner("b")}
-              className="h-4 w-4"
+              className={radioClass}
             />
             <span>{teamBName || "Team B"}</span>
           </label>
         </fieldset>
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-medium text-gray-600 dark:text-gray-400">
-            Elected to
-          </legend>
-          <label className="flex items-center gap-2">
+          <legend className={`${labelText} mb-1`}>Elected to</legend>
+          <label className="flex min-h-11 items-center gap-2">
             <input
               type="radio"
               name="electedTo"
               value="bat"
               checked={electedTo === "bat"}
               onChange={() => setElectedTo("bat")}
-              className="h-4 w-4"
+              className={radioClass}
             />
             <span>Bat</span>
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex min-h-11 items-center gap-2">
             <input
               type="radio"
               name="electedTo"
               value="bowl"
               checked={electedTo === "bowl"}
               onChange={() => setElectedTo("bowl")}
-              className="h-4 w-4"
+              className={radioClass}
             />
             <span>Bowl</span>
           </label>
@@ -226,18 +223,16 @@ export function CreateMatchForm() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Opening lineup</h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <h2 className={sectionTitle}>Opening lineup</h2>
+        <p className="text-sm text-muted">
           {battingTeamLabel} bats first · {bowlingTeamLabel} bowls
         </p>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            Striker ({battingTeamLabel})
-          </span>
+          <span className={labelText}>Striker ({battingTeamLabel})</span>
           <select
             value={openingStrikerIndex}
             onChange={(e) => setOpeningStrikerIndex(Number(e.target.value))}
-            className="rounded-lg border border-gray-300 px-3 py-2.5 text-base dark:border-gray-600 dark:bg-gray-900"
+            className={fieldClass}
           >
             {battingPlayers.map((name, i) => (
               <option key={`striker-${i}`} value={i}>
@@ -247,13 +242,11 @@ export function CreateMatchForm() {
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            Non-striker ({battingTeamLabel})
-          </span>
+          <span className={labelText}>Non-striker ({battingTeamLabel})</span>
           <select
             value={openingNonStrikerIndex}
             onChange={(e) => setOpeningNonStrikerIndex(Number(e.target.value))}
-            className="rounded-lg border border-gray-300 px-3 py-2.5 text-base dark:border-gray-600 dark:bg-gray-900"
+            className={fieldClass}
           >
             {battingPlayers.map((name, i) => (
               <option key={`non-striker-${i}`} value={i}>
@@ -263,13 +256,11 @@ export function CreateMatchForm() {
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            Bowler ({bowlingTeamLabel})
-          </span>
+          <span className={labelText}>Bowler ({bowlingTeamLabel})</span>
           <select
             value={openingBowlerIndex}
             onChange={(e) => setOpeningBowlerIndex(Number(e.target.value))}
-            className="rounded-lg border border-gray-300 px-3 py-2.5 text-base dark:border-gray-600 dark:bg-gray-900"
+            className={fieldClass}
           >
             {bowlingPlayers.map((name, i) => (
               <option key={`bowler-${i}`} value={i}>
@@ -281,11 +272,9 @@ export function CreateMatchForm() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Scorer PIN</h2>
+        <h2 className={sectionTitle}>Scorer PIN</h2>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            4–6 digit PIN to unlock scoring
-          </span>
+          <span className={labelText}>4–6 digit PIN to unlock scoring</span>
           <input
             type="password"
             inputMode="numeric"
@@ -296,22 +285,18 @@ export function CreateMatchForm() {
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
             placeholder="••••"
-            className="rounded-lg border border-gray-300 px-3 py-2.5 text-base tracking-widest dark:border-gray-600 dark:bg-gray-900"
+            className={`${fieldClass} tracking-widest`}
           />
         </label>
       </section>
 
       {error && (
-        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+        <p role="alert" className={alertError}>
           {error}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded-xl bg-green-600 px-6 py-4 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-      >
+      <button type="submit" disabled={loading} className={`${btnPrimary} w-full`}>
         {loading ? "Creating match…" : "Create match"}
       </button>
     </form>

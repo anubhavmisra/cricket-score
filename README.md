@@ -21,8 +21,8 @@ For production deploys, a [Neon](https://neon.tech) PostgreSQL database is optio
 No database account or `.env.local` required.
 
 ```bash
-npm install
-npm run dev
+npm install   # or: pnpm install
+npm run dev   # or: pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). On first API call, the app creates `./data/cricket-score.db` and applies migrations automatically.

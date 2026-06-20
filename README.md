@@ -13,50 +13,70 @@ A mobile-first web app for live T20 cricket scoring. Create a match, share the l
 ## Prerequisites
 
 - Node.js 20+
-- A [Neon](https://neon.tech) PostgreSQL database
 
-## Local setup
+For production deploys, a [Neon](https://neon.tech) PostgreSQL database is optional — **local dev uses SQLite by default** with zero external services.
+
+## Local setup (SQLite — default)
+
+No database account or `.env.local` required.
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). On first API call, the app creates `./data/cricket-score.db` and applies migrations automatically.
+
+Optional overrides in `.env.local`:
+
+```env
+DB_DRIVER=sqlite
+SQLITE_PATH=./data/cricket-score.db
+```
+
+### Manual SQLite migrations (optional)
+
+```bash
+npm run db:migrate:local
+npm run db:studio:local
+```
+
+## Local setup (Neon Postgres — optional)
+
+Use this if you want to mirror production locally.
 
 ### 1. Create a Neon database
 
 1. Sign up at [neon.tech](https://neon.tech) and create a project.
-2. Copy the connection string (pooled or direct works).
+2. Copy the connection string.
 
 ### 2. Configure environment
 
-Create `.env.local` in the project root:
+Create `.env.local`:
 
 ```env
+DB_DRIVER=postgres
 DATABASE_URL=postgresql://user:password@host/dbname?sslmode=require
 ```
 
-### 3. Install dependencies and migrate
+### 3. Migrate and run
 
 ```bash
 npm install
-npm run db:migrate
-```
-
-### 4. Run the dev server
-
-```bash
+npm run db:migrate:prod
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000). Create a match at `/matches/new`, then open the share link (`/m/[id]`) on another device to watch live updates.
 
 ## Deploy to Vercel
 
 1. Push this repo to GitHub and import it in [Vercel](https://vercel.com/new).
 2. In the Vercel project, go to **Storage** → **Connect Database** → choose **Neon** (or add `DATABASE_URL` manually under **Settings → Environment Variables**).
-3. Set `DATABASE_URL` for Production (and Preview if you use preview deploys).
+3. Set `DB_DRIVER=postgres` and `DATABASE_URL` for Production (and Preview if you use preview deploys).
 4. Deploy. After the first deploy, run migrations against the production database:
 
    ```bash
-   DATABASE_URL="your-production-url" npm run db:migrate
+   npm run db:migrate:prod
    ```
-
-   Or use Neon's SQL console / CI to apply migrations from the `drizzle/` folder.
 
 5. Visit your Vercel URL and create a test match.
 
@@ -68,9 +88,10 @@ Open [http://localhost:3000](http://localhost:3000). Create a match at `/matches
 | `npm run build` | Production build |
 | `npm run start` | Run production server |
 | `npm test` | Run unit tests (Vitest) |
-| `npm run db:migrate` | Apply Drizzle migrations |
-| `npm run db:generate` | Generate migrations after schema changes |
-| `npm run db:studio` | Open Drizzle Studio |
+| `npm run db:migrate:local` | Apply SQLite migrations (`./data/cricket-score.db`) |
+| `npm run db:migrate:prod` | Apply Postgres migrations (Neon) |
+| `npm run db:generate:local` | Generate SQLite migrations after schema changes |
+| `npm run db:studio:local` | Open Drizzle Studio for local SQLite |
 
 ## Manual QA checklist
 
@@ -84,5 +105,5 @@ Open [http://localhost:3000](http://localhost:3000). Create a match at `/matches
 ## Tech stack
 
 - **Next.js** (App Router) on **Vercel**
-- **Neon** PostgreSQL with **Drizzle ORM**
+- **SQLite** (local default) or **Neon** PostgreSQL (production) with **Drizzle ORM**
 - Event-sourced ball log; live score derived in application code

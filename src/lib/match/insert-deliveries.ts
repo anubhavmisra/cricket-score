@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { deliveries, innings } from "@/db/schema";
 import { z } from "zod";
@@ -37,18 +37,21 @@ export async function insertDeliveriesBatch(
         continue;
       }
 
-      const [{ maxSeq }] = await tx
-        .select({ maxSeq: sql<number>`coalesce(max(${deliveries.sequence}), 0)` })
+      const inningsDeliveries = await tx
+        .select({
+          sequence: deliveries.sequence,
+          extraType: deliveries.extraType,
+          isUndo: deliveries.isUndo,
+        })
         .from(deliveries)
         .where(eq(deliveries.inningsId, item.inningsId));
 
-      const [{ legalBalls }] = await tx
-        .select({ legalBalls: sql<number>`count(*) filter (where ${deliveries.extraType} is null and ${deliveries.isUndo} = false)` })
-        .from(deliveries)
-        .where(eq(deliveries.inningsId, item.inningsId));
+      const maxSeq = inningsDeliveries.reduce((max, row) => Math.max(max, row.sequence), 0);
+      const legalBallCount = inningsDeliveries.filter(
+        (row) => !row.isUndo && !row.extraType,
+      ).length;
 
-      const sequence = Number(maxSeq) + 1;
-      const legalBallCount = Number(legalBalls);
+      const sequence = maxSeq + 1;
       const overNumber = Math.floor(legalBallCount / 6);
       const ballInOver = (legalBallCount % 6) + 1;
 

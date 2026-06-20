@@ -88,7 +88,7 @@ export const deliveries = pgTable(
     undoesSequence: integer("undoes_sequence"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (table) => [uniqueIndex("deliveries_client_event_id_idx").on(table.clientEventId)]
+  (table) => [uniqueIndex("deliveries_client_event_id_idx").on(table.clientEventId)],
 );
 
 export const scorerSessions = pgTable("scorer_sessions", {

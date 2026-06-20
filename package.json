@@ -10,12 +10,17 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
+    "db:generate:local": "drizzle-kit generate --config=drizzle.config.sqlite.ts",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:migrate:local": "drizzle-kit migrate --config=drizzle.config.sqlite.ts",
+    "db:migrate:prod": "drizzle-kit migrate --config=drizzle.config.ts",
+    "db:studio": "drizzle-kit studio",
+    "db:studio:local": "drizzle-kit studio --config=drizzle.config.sqlite.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.11.1",
     "drizzle-orm": "^0.45.2",
     "idb": "^8.0.3",
     "next": "16.2.9",
@@ -26,6 +31,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

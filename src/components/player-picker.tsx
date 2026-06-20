@@ -40,7 +40,7 @@ export function PlayerPicker({ players, title, onSelect, onCancel }: PlayerPicke
                 type="button"
                 disabled={player.disabled}
                 onClick={() => onSelect(player.id)}
-                className="flex w-full flex-col rounded-xl px-4 py-3 text-left text-base font-medium transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800"
+                className="flex w-full min-h-[48px] flex-col rounded-xl px-4 py-3 text-left text-base font-medium transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800"
               >
                 <span>{player.name}</span>
                 {player.disabled && player.disabledReason && (

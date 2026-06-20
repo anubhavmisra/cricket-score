@@ -296,7 +296,7 @@ export function BallPad({ matchId: _matchId, state, onDeliveryRecorded }: BallPa
   }
 
   const buttonClass =
-    "min-h-12 rounded-xl px-2 py-3 text-lg font-bold transition-colors active:scale-95 disabled:cursor-not-allowed disabled:opacity-50";
+    "min-h-[48px] rounded-xl px-2 py-3 text-lg font-bold transition-colors active:scale-95 disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <div className="mt-6">

@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-20T00:00:00.000Z",
+  "title": "Design System: Cricket Score",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Pitch Green",
+        "canonical": "oklch(0.48 0.14 145)",
+        "tonalRamp": [
+          "oklch(0.18 0.08 145)",
+          "oklch(0.28 0.10 145)",
+          "oklch(0.38 0.12 145)",
+          "oklch(0.48 0.14 145)",
+          "oklch(0.58 0.14 145)",
+          "oklch(0.68 0.12 145)",
+          "oklch(0.78 0.08 145)",
+          "oklch(0.92 0.04 145)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Field Mist",
+        "canonical": "oklch(0.985 0.006 145)",
+        "tonalRamp": [
+          "oklch(0.16 0.015 145)",
+          "oklch(0.24 0.018 145)",
+          "oklch(0.32 0.02 145)",
+          "oklch(0.42 0.025 145)",
+          "oklch(0.55 0.02 145)",
+          "oklch(0.72 0.015 145)",
+          "oklch(0.88 0.01 145)",
+          "oklch(0.985 0.006 145)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "body": { "displayName": "Body", "purpose": "Default UI copy and scorecard lines." },
+      "score": { "displayName": "Live score", "purpose": "Runs/wickets in sticky header." }
+    },
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.25, 1, 0.5, 1)",
+        "purpose": "Color transitions on buttons and inputs."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main call to action: create match, start scoring, unlock.",
+      "html": "<button class=\"ds-btn-primary\">Start scoring</button>",
+      "css": ".ds-btn-primary { background: var(--primary, #2d6b3a); color: var(--primary-foreground, #f7faf7); padding: 16px 24px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; min-height: 48px; cursor: pointer; transition: background 0.15s cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-primary:hover { background: #245a2f; } .ds-btn-primary:focus-visible { outline: 2px solid var(--primary, #2d6b3a); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ball Pad Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Run scoring button on the ball pad grid.",
+      "html": "<button class=\"ds-btn-ball\">4</button>",
+      "css": ".ds-btn-ball { background: var(--surface, #fff); color: var(--foreground, #1a2e1c); border: 1px solid var(--border, #d4dfd5); padding: 12px 8px; font-size: 1.125rem; font-weight: 700; border-radius: 12px; min-height: 48px; cursor: pointer; transition: background 0.15s; } .ds-btn-ball:hover { background: var(--surface-muted, #eef3ee); } .ds-btn-ball:focus-visible { outline: 2px solid var(--primary, #2d6b3a); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Team names, player names, PIN entry.",
+      "html": "<input class=\"ds-input\" placeholder=\"Team A name\" />",
+      "css": ".ds-input { background: var(--surface, #fff); color: var(--foreground, #1a2e1c); border: 1px solid var(--border, #d4dfd5); border-radius: 8px; padding: 10px 12px; font-size: 1rem; width: 100%; box-sizing: border-box; } .ds-input::placeholder { color: var(--muted, #4a5f4d); } .ds-input:focus-visible { outline: 2px solid var(--primary, #2d6b3a); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Groundsman's Phone",
+    "overview": "A scorer at mid-wicket needs numbers first, buttons second, decoration never. Flat surfaces, pitch-green accents, and contrast for outdoor glare.",
+    "keyCharacteristics": [
+      "Pitch-green primary on restrained neutrals",
+      "48px touch targets on scoring controls",
+      "Flat elevation with borders, not shadows",
+      "Sentence-case labels, no uppercase kickers"
+    ],
+    "rules": [
+      {
+        "name": "The Score First Rule",
+        "body": "Primary green appears only on actions that move the match forward.",
+        "section": "colors"
+      },
+      {
+        "name": "The Fixed Scale Rule",
+        "body": "Product UI uses fixed rem sizes, not fluid clamp headings.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do keep the live score the largest element on the match screen",
+      "Do use semantic tokens not raw Tailwind grays",
+      "Do respect prefers-reduced-motion on button press feedback"
+    ],
+    "donts": [
+      "Don't use uppercase tracked section eyebrows",
+      "Don't stack identical bordered cards when dividers suffice",
+      "Don't ship modals without focus trap and Escape handling"
+    ]
+  }
+}

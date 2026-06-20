@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Scoreboard, type MatchState } from "./scoreboard";
 import { ShareLinkBar } from "./share-link-bar";
 import { PinUnlockModal } from "./pin-unlock-modal";
+import { BallPad } from "./ball-pad";
 
 function scorerStorageKey(matchId: string) {
   return `scorer-${matchId}`;
@@ -79,9 +80,7 @@ export function MatchView({ matchId }: { matchId: string }) {
       )}
 
       {isScorer && (
-        <p className="mt-6 rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-center font-medium text-green-800 dark:border-green-700 dark:bg-green-950 dark:text-green-200">
-          Scorer mode active
-        </p>
+        <BallPad matchId={matchId} state={state} onDeliveryRecorded={() => {}} />
       )}
 
       <PinUnlockModal

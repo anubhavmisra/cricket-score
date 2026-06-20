@@ -5,6 +5,7 @@ import type { MatchState } from "./scoreboard";
 import { PlayerPicker } from "./player-picker";
 import { WicketPicker } from "./wicket-picker";
 import type { ExtraType, WicketType } from "@/lib/cricket/types";
+import { enqueueDelivery } from "@/lib/offline/delivery-queue";
 
 type DeliveryRow = {
   sequence: number;
@@ -123,6 +124,12 @@ export function BallPad({ matchId: _matchId, state, onDeliveryRecorded }: BallPa
           bowlerId: ids.bowlerId,
         };
 
+        await enqueueDelivery({
+          clientEventId,
+          inningsId: ids.inningsId,
+          payload: fullPayload,
+          synced: false,
+        });
         onDeliveryRecorded();
 
         const isLegal = !payload.extraType;
@@ -276,6 +283,12 @@ export function BallPad({ matchId: _matchId, state, onDeliveryRecorded }: BallPa
         undoesSequence: latest.sequence,
       };
 
+      await enqueueDelivery({
+        clientEventId,
+        inningsId: ids.inningsId,
+        payload: fullPayload,
+        synced: false,
+      });
       onDeliveryRecorded();
     } finally {
       setRecording(false);

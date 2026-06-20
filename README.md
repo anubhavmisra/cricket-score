@@ -27,6 +27,18 @@ npm run dev   # or: pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000). On first API call, the app creates `./data/cricket-score.db` and applies migrations automatically.
 
+### Access from other devices (LAN)
+
+The dev server listens on all interfaces (`0.0.0.0`). From another phone or laptop on the same Wi‑Fi, open the **Network** URL shown in the terminal (e.g. `http://192.168.1.5:3000`).
+
+If share links still point at `localhost`, set your LAN origin in `.env.local` and restart the dev server:
+
+```env
+NEXT_PUBLIC_APP_ORIGIN=http://192.168.1.5:3000
+```
+
+Use your machine’s actual LAN IP and port.
+
 Optional overrides in `.env.local`:
 
 ```env

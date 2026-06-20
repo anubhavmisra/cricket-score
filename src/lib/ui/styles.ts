@@ -44,7 +44,14 @@ export const alertWarning =
   "rounded-lg border border-[var(--warning-border)] bg-[var(--warning-bg)] px-3 py-2 text-center text-sm font-medium text-[var(--warning-text)]";
 
 export const pageShell =
-  "mx-auto max-w-lg px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.5rem,env(safe-area-inset-top))]";
+  "mx-auto w-full max-w-lg box-border px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.5rem,env(safe-area-inset-top))]";
+
+/** Full-width card used on match live + scorecard views. */
+export const matchPanel =
+  "box-border w-full min-w-0 overflow-hidden rounded-xl border border-border bg-surface";
+
+/** Vertical stack for match tab content. */
+export const matchViewStack = "flex w-full min-w-0 flex-col gap-4";
 
 export const pageTitle = "text-2xl font-bold text-balance text-foreground";
 

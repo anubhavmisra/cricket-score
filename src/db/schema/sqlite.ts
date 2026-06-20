@@ -90,3 +90,35 @@ export const scorerSessions = sqliteTable("scorer_sessions", {
     .references(() => matches.id, { onDelete: "cascade" }),
   expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
 });
+
+export const matchLikes = sqliteTable(
+  "match_likes",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    matchId: text("match_id")
+      .notNull()
+      .references(() => matches.id, { onDelete: "cascade" }),
+    viewerId: text("viewer_id").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => [uniqueIndex("match_likes_match_viewer_idx").on(table.matchId, table.viewerId)],
+);
+
+export const matchComments = sqliteTable("match_comments", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  matchId: text("match_id")
+    .notNull()
+    .references(() => matches.id, { onDelete: "cascade" }),
+  viewerId: text("viewer_id").notNull(),
+  authorName: text("author_name").notNull(),
+  body: text("body").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});

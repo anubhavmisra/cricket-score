@@ -30,6 +30,7 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
   --z-sticky: 10;
+  --z-dropdown: 40;
   --z-modal: 50;
   --ease-out: cubic-bezier(0.25, 1, 0.5, 1);
   --duration-fast: 150ms;

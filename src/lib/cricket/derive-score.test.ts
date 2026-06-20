@@ -42,4 +42,25 @@ describe("deriveInningsState", () => {
     expect(state.legalBalls).toBe(6);
     expect(state.oversDisplay).toBe("1.0");
   });
+
+  it("wide does not count as a legal ball but adds runs", () => {
+    const deliveries: DeliveryInput[] = [
+      delivery({ sequence: 1, extraType: "wide", extraRuns: 0, runsOffBat: 0, ballInOver: 1 }),
+      delivery({ sequence: 2, runsOffBat: 1, ballInOver: 1 }),
+    ];
+    const state = deriveInningsState(deliveries, config);
+    expect(state.totalRuns).toBe(2);
+    expect(state.legalBalls).toBe(1);
+    expect(state.oversDisplay).toBe("0.1");
+  });
+
+  it("undoes a delivery", () => {
+    const deliveries: DeliveryInput[] = [
+      delivery({ sequence: 1, runsOffBat: 4, ballInOver: 1 }),
+      { ...delivery({ sequence: 2, runsOffBat: 0, ballInOver: 2 }), isUndo: true, undoesSequence: 1 },
+    ];
+    const state = deriveInningsState(deliveries, config);
+    expect(state.totalRuns).toBe(0);
+    expect(state.legalBalls).toBe(0);
+  });
 });

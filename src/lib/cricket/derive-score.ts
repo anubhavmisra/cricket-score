@@ -1,4 +1,11 @@
-import type { DeliveryInput, InningsConfig, InningsState, PlayerStats, BowlerStats } from "./types";
+import type {
+  DeliveryInput,
+  FallOfWicket,
+  InningsConfig,
+  InningsState,
+  PlayerStats,
+  BowlerStats,
+} from "./types";
 
 function initBatsman(playerId: string): PlayerStats {
   return { playerId, runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false };
@@ -56,6 +63,7 @@ export function deriveInningsState(
   const bowlerStats: Record<string, BowlerStats> = {
     [config.openingBowlerId]: initBowler(config.openingBowlerId),
   };
+  const fallOfWickets: FallOfWicket[] = [];
 
   for (const d of active) {
     const runs = totalDeliveryRuns(d);
@@ -87,6 +95,15 @@ export function deriveInningsState(
         batsmanStats[d.dismissedPlayerId].isOut = true;
       }
       bowlerStats[d.bowlerId].wickets += d.wicketType !== "run_out" ? 1 : 0;
+      if (d.dismissedPlayerId) {
+        fallOfWickets.push({
+          wicket: wickets,
+          runs: totalRuns,
+          over: Math.floor(legalBalls / 6),
+          ball: legalBalls % 6,
+          playerId: d.dismissedPlayerId,
+        });
+      }
     }
 
     const swapRuns = d.extraType === "wide" ? 1 + d.extraRuns : d.runsOffBat;
@@ -114,7 +131,7 @@ export function deriveInningsState(
     isComplete: completedByOvers || completedByWickets,
     batsmanStats,
     bowlerStats,
-    fallOfWickets: [],
+    fallOfWickets,
     undoneSequences: undone,
   };
 }
